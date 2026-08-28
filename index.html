@@ -428,7 +428,7 @@ function renderDayProg(iso,arr,prog){
   host.innerHTML=`<div class="ph">이 날 프로그램 TOP (평균)</div>`;
   rows.forEach((r,i)=>{
     const d=document.createElement('div'); d.className='prow';
-    d.innerHTML=`<span class="rk">${i+1}</span><span class="pn">${r.p} <small>${r.n}회</small></span><span class="pv num">${fmt(r.mean)}</span>`;
+    d.innerHTML=`<span class="rk">${i+1}</span><span class="pn">${r.p}</span><span class="pv num">${fmt(r.mean)}</span>`;
     host.appendChild(d);
   });
 }
