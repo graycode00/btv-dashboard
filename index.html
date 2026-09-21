@@ -265,6 +265,10 @@ table.tbl td:first-child,table.tbl th:first-child{text-align:left; position:stic
           <button data-u="m">월간</button>
           <button data-u="y">연간</button>
         </div>
+        <div class="seg seg-lg" id="rankAdj" style="display:none;margin-left:8px">
+          <button data-a="raw" class="on">원지표</button>
+          <button data-a="cov">커버리지 보정</button>
+        </div>
       </div>
     </div>
     <div class="rk-picker">
@@ -308,7 +312,7 @@ const lastIso = dates[dates.length-1];
 function mdw(iso){const o=dinfo[iso];const[y,m,da]=iso.split('-');return `${+m}/${+da}(${o.wd})`;}
 function dayAvg(iso){const a=D.ratings[iso]; if(!a) return null; const v=a.filter(x=>x!=null); return v.length? v.reduce((s,x)=>s+x,0)/v.length : null;}
 
-const state = { day:lastIso, dayCmp:'none', heatN:30, heatSplit:'all', tMode:'day', tRange:90, pPeriod:30, prog:null, rankUnit:'d', rankPeriod:'' };
+const state = { day:lastIso, dayCmp:'none', heatN:30, heatSplit:'all', tMode:'day', tRange:90, pPeriod:30, prog:null, rankUnit:'d', rankPeriod:'', rankAdj:'raw' };
 
 // ---------- ranking helpers ----------
 const RUNIT={d:'day',w:'week',m:'month'};
@@ -610,13 +614,16 @@ function rankRowsFor(u,key){
   return rows;
 }
 function chgHtml(d){return d==null?'<span class="chg z">–</span>':d>0?`<span class="chg u">▲${d}</span>`:d<0?`<span class="chg d">▼${-d}</span>`:`<span class="chg z">–</span>`;}
+const COV={783:6485115,54:6500618,253:6500618,148:6500618,379:6478149,104:6485115,499:6270812,693:6478149,176:6478149,285:5991521,355:6485115,287:5747105,705:6500618,509:6270812,513:2487712};
+const NSUB=6709470;
+function covF(id){return 1+(NSUB-(COV[id]||NSUB))/NSUB;}
 function annualRows(){
   const keys=rkPeriods('d'), n=R.ids.length;
   const sum=new Array(n).fill(0), cnt=new Array(n).fill(0), ssum=new Array(n).fill(0);
   keys.forEach(key=>{const rates=(R.rate3.d[key]||'').split(','), k=R.kf.d[key]||0;
     for(let ci=0;ci<n;ci++){const v=rates[ci];if(v!==undefined&&v!==''){const rv=(+v)/1000;sum[ci]+=rv;cnt[ci]++;ssum[ci]+=rv*k;}}});
-  let arr=[];for(let ci=0;ci<n;ci++){if(cnt[ci]>0)arr.push({id:R.ids[ci],rate:sum[ci]/cnt[ci],share:ssum[ci]/cnt[ci],days:cnt[ci]});}
-  arr.sort((a,b)=>b.rate-a.rate); arr.forEach((r,i)=>r.rank=i+1);
+  let arr=[];for(let ci=0;ci<n;ci++){if(cnt[ci]>0){const id=R.ids[ci];const sh=ssum[ci]/cnt[ci];arr.push({id,rate:sum[ci]/cnt[ci],share:sh,ashare:sh*covF(id),days:cnt[ci]});}}
+  arr.sort((a,b)=>b.rate-a.rate); arr.forEach((r,i)=>r.rrank=i+1);
   return {rows:arr,first:keys[0],last:keys[keys.length-1]};
 }
 function annualSparkPts(){
@@ -630,13 +637,25 @@ function annualSparkPts(){
   return pts;
 }
 function renderAnnual(){
-  const {rows,first,last}=annualRows(); const me=rows.find(r=>r.id===355);
+  const {rows,first,last}=annualRows();
   const rng=`${+first.slice(4,6)}/${+first.slice(6,8)}~${+last.slice(4,6)}/${+last.slice(6,8)}`;
-  $('#rankHead').innerHTML=`<b>${first.slice(0,4)} 누적 (${rng})</b> · CNTV <span class="big">${me?me.rank:'-'}위</span><b>/15</b> · 평균 시청률 <b>${me?me.rate.toFixed(3):'—'}</b>`;
-  let h='<table class="rtbl"><thead><tr><th>순위</th><th>채널</th><th>평균 시청률</th><th>평균 점유율</th><th>누적일</th></tr></thead><tbody>';
-  rows.forEach(r=>{h+=`<tr class="${r.id===355?'me':''}"><td><span class="rnk">${r.rank}</span></td><td>${R.names[r.id]}${r.id===355?' <b style="color:var(--accent)">◀</b>':''}</td><td class="num">${r.rate.toFixed(3)}</td><td class="num">${r.share.toFixed(2)}</td><td class="num" style="color:var(--ink-3);font-size:11.5px">${r.days}일</td></tr>`;});
-  h+='</tbody></table>';
-  $('#rankTable').innerHTML=h; renderSpark();
+  const me=rows.find(r=>r.id===355);
+  if(state.rankAdj==='cov'){
+    const disp=rows.slice().sort((a,b)=>b.ashare-a.ashare); disp.forEach((r,i)=>r.arank=i+1);
+    const meA=disp.find(r=>r.id===355);
+    $('#rankHead').innerHTML=`<b>${first.slice(0,4)} 누적 (${rng}) · 커버리지 보정</b> · CNTV <span class="big">${meA?meA.arank:'-'}위</span><b>/15</b> · 보정 점유율 <b>${meA?meA.ashare.toFixed(3):'—'}</b> · <span style="color:var(--ink-3);font-size:11px">티어 가입자수 보정(참고)·공식순위 아님</span>`;
+    let h='<table class="rtbl"><thead><tr><th>순위</th><th>채널</th><th>평균 점유율</th><th>보정 점유율</th><th>원순위대비</th><th>누적일</th></tr></thead><tbody>';
+    disp.forEach(r=>{const d=r.rrank-r.arank;h+=`<tr class="${r.id===355?'me':''}"><td><span class="rnk">${r.arank}</span></td><td>${R.names[r.id]}${r.id===355?' <b style="color:var(--accent)">◀</b>':''}</td><td class="num">${r.share.toFixed(3)}</td><td class="num">${r.ashare.toFixed(3)}</td><td>${chgHtml(d)}</td><td class="num" style="color:var(--ink-3);font-size:11.5px">${r.days}일</td></tr>`;});
+    h+='</tbody></table>';
+    $('#rankTable').innerHTML=h;
+  } else {
+    $('#rankHead').innerHTML=`<b>${first.slice(0,4)} 누적 (${rng})</b> · CNTV <span class="big">${me?me.rrank:'-'}위</span><b>/15</b> · 평균 시청률 <b>${me?me.rate.toFixed(3):'—'}</b>`;
+    let h='<table class="rtbl"><thead><tr><th>순위</th><th>채널</th><th>평균 시청률</th><th>평균 점유율</th><th>누적일</th></tr></thead><tbody>';
+    rows.forEach(r=>{h+=`<tr class="${r.id===355?'me':''}"><td><span class="rnk">${r.rrank}</span></td><td>${R.names[r.id]}${r.id===355?' <b style="color:var(--accent)">◀</b>':''}</td><td class="num">${r.rate.toFixed(3)}</td><td class="num">${r.share.toFixed(3)}</td><td class="num" style="color:var(--ink-3);font-size:11.5px">${r.days}일</td></tr>`;});
+    h+='</tbody></table>';
+    $('#rankTable').innerHTML=h;
+  }
+  renderSpark();
 }
 function renderRank(){
   if(state.rankUnit==='y'){renderAnnual();return;}
@@ -646,7 +665,7 @@ function renderRank(){
   $('#rankHead').innerHTML=`<b>${rkLabel(u,key)}</b> · CNTV <span class="big">${me?me.rank:'-'}위</span><b>/15</b> · 시청률 <b>${me&&me.rate!=null?me.rate.toFixed(3):'—'}</b> · ${RPREV[u]}대비 ${meChg}`;
   let h='<table class="rtbl"><thead><tr><th>순위</th><th>채널</th><th>시청률</th><th>점유율</th><th>'+RPREV[u]+'대비</th></tr></thead><tbody>';
   rows.forEach(r=>{
-    h+=`<tr class="${r.id===355?'me':''}"><td><span class="rnk">${r.rank}</span></td><td>${R.names[r.id]}${r.id===355?' <b style="color:var(--accent)">◀</b>':''}</td><td class="num">${r.rate!=null?r.rate.toFixed(3):'—'}</td><td class="num">${r.share!=null?r.share.toFixed(2):'—'}</td><td>${chgHtml(r.delta)}</td></tr>`;
+    h+=`<tr class="${r.id===355?'me':''}"><td><span class="rnk">${r.rank}</span></td><td>${R.names[r.id]}${r.id===355?' <b style="color:var(--accent)">◀</b>':''}</td><td class="num">${r.rate!=null?r.rate.toFixed(3):'—'}</td><td class="num">${r.share!=null?r.share.toFixed(3):'—'}</td><td>${chgHtml(r.delta)}</td></tr>`;
   });
   h+='</tbody></table>';
   $('#rankTable').innerHTML=h;
@@ -677,7 +696,9 @@ function populatePeriodSel(){
 function renderRankAll(){
   if(!rankReady()){const b=document.getElementById('rankUnit'); if(b){const c=b.closest('.card'); if(c)c.style.display='none';} return;}
   const pick=['rkPrev','rkSel','rkNext'].map(id=>document.getElementById(id));
-  if(state.rankUnit==='y'){ pick.forEach(e=>{if(e)e.style.display='none';}); renderRank(); return; }
+  const adj=document.getElementById('rankAdj');
+  if(state.rankUnit==='y'){ if(adj)adj.style.display=''; pick.forEach(e=>{if(e)e.style.display='none';}); renderRank(); return; }
+  if(adj)adj.style.display='none';
   pick.forEach(e=>{if(e)e.style.display='';});
   const keys=rkPeriods(state.rankUnit);
   if(!keys.includes(state.rankPeriod)) state.rankPeriod=keys[keys.length-1];
@@ -693,6 +714,7 @@ seg('#trendMode','data-m',v=>{state.tMode=v;renderTrend();});
 seg('#trendRange','data-r',v=>{state.tRange=v==='all'?'all':+v;renderTrend();});
 seg('#progPeriod','data-r',v=>{state.pPeriod=v==='all'?'all':+v;state.prog=null;renderProg();renderProgTrend();});
 seg('#rankUnit','data-u',v=>{state.rankUnit=v;const ks=rkPeriods(v);state.rankPeriod=ks[ks.length-1];renderRankAll();});
+seg('#rankAdj','data-a',v=>{state.rankAdj=v;renderRank();});
 $('#rkSel').onchange=e=>{state.rankPeriod=e.target.value;renderRank();};
 $('#rkPrev').onclick=()=>{const ks=rkPeriods(state.rankUnit),i=ks.indexOf(state.rankPeriod);if(i>0){state.rankPeriod=ks[i-1];$('#rkSel').value=state.rankPeriod;renderRank();}};
 $('#rkNext').onclick=()=>{const ks=rkPeriods(state.rankUnit),i=ks.indexOf(state.rankPeriod);if(i<ks.length-1){state.rankPeriod=ks[i+1];$('#rkSel').value=state.rankPeriod;renderRank();}};
