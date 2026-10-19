@@ -183,74 +183,6 @@ table.tbl td:first-child,table.tbl th:first-child{text-align:left; position:stic
     <div class="legendrow" id="dayLegend"></div>
   </div>
 
-  <!-- HEATMAP -->
-  <div class="card">
-    <div class="chead">
-      <div>
-        <h2>시간대 × 날짜 히트맵</h2>
-        <p class="desc">어느 시간대가 강한지 색으로 한눈에 · 진할수록 높은 시청률</p>
-      </div>
-      <div class="controls">
-        <div class="seg" id="heatSplit">
-          <button data-s="all" class="on">전체</button>
-          <button data-s="wd">평일</button>
-          <button data-s="we">주말</button>
-        </div>
-        <div class="seg" id="heatRange">
-          <button data-n="14">14일</button>
-          <button data-n="30" class="on">30일</button>
-          <button data-n="60">60일</button>
-          <button data-n="90">90일</button>
-        </div>
-        <span class="heat-legend">낮음<span class="heat-grad"></span>높음</span>
-      </div>
-    </div>
-    <div class="hxwrap" id="heatChart"></div>
-  </div>
-
-  <!-- TREND -->
-  <div class="card">
-    <div class="chead">
-      <div>
-        <h2>시청률 추이</h2>
-        <p class="desc">일 · 주 · 월 단위 평균 시청률 흐름</p>
-      </div>
-      <div class="controls">
-        <div class="seg" id="trendMode">
-          <button data-m="day" class="on">일</button>
-          <button data-m="week">주</button>
-          <button data-m="month">월</button>
-        </div>
-        <div class="seg" id="trendRange">
-          <button data-r="30">30일</button>
-          <button data-r="90" class="on">90일</button>
-          <button data-r="all">전체</button>
-        </div>
-      </div>
-    </div>
-    <div class="svgwrap" id="trendChart"></div>
-    <div class="legendrow" id="trendLegend"></div>
-  </div>
-
-  <!-- PROGRAM -->
-  <div class="card">
-    <div class="chead">
-      <div>
-        <h2>프로그램별 평균 시청률 TOP</h2>
-        <p class="desc">기간 내 편성된 프로그램의 시간대 평균 시청률 순위 · 막대 클릭 시 해당 프로그램 추이</p>
-      </div>
-      <div class="controls">
-        <div class="seg" id="progPeriod">
-          <button data-r="30" class="on">최근 30일</button>
-          <button data-r="90">90일</button>
-          <button data-r="all">전체</button>
-        </div>
-      </div>
-    </div>
-    <div class="svgwrap" id="progChart"></div>
-    <div class="svgwrap" id="progTrend" style="margin-top:8px"></div>
-  </div>
-
   <!-- RANKING -->
   <div class="card">
     <div class="chead">
@@ -279,6 +211,74 @@ table.tbl td:first-child,table.tbl th:first-child{text-align:left; position:stic
       <div id="rkSpark" title="CNTV 순위 추이(전체 기간)"></div>
     </div>
     <div id="rankTable"></div>
+  </div>
+
+  <!-- PROGRAM -->
+  <div class="card">
+    <div class="chead">
+      <div>
+        <h2>프로그램별 평균 시청률 TOP</h2>
+        <p class="desc">기간 내 편성된 프로그램의 시간대 평균 시청률 순위 · 막대 클릭 시 해당 프로그램 추이</p>
+      </div>
+      <div class="controls">
+        <div class="seg" id="progPeriod">
+          <button data-r="30" class="on">최근 30일</button>
+          <button data-r="90">90일</button>
+          <button data-r="all">전체</button>
+        </div>
+      </div>
+    </div>
+    <div class="svgwrap" id="progChart"></div>
+    <div class="svgwrap" id="progTrend" style="margin-top:8px"></div>
+  </div>
+
+  <!-- TREND -->
+  <div class="card">
+    <div class="chead">
+      <div>
+        <h2>시청률 추이</h2>
+        <p class="desc">일 · 주 · 월 단위 평균 시청률 흐름</p>
+      </div>
+      <div class="controls">
+        <div class="seg" id="trendMode">
+          <button data-m="day" class="on">일</button>
+          <button data-m="week">주</button>
+          <button data-m="month">월</button>
+        </div>
+        <div class="seg" id="trendRange">
+          <button data-r="30">30일</button>
+          <button data-r="90" class="on">90일</button>
+          <button data-r="all">전체</button>
+        </div>
+      </div>
+    </div>
+    <div class="svgwrap" id="trendChart"></div>
+    <div class="legendrow" id="trendLegend"></div>
+  </div>
+
+  <!-- HEATMAP -->
+  <div class="card">
+    <div class="chead">
+      <div>
+        <h2>시간대 × 날짜 히트맵</h2>
+        <p class="desc">어느 시간대가 강한지 색으로 한눈에 · 진할수록 높은 시청률</p>
+      </div>
+      <div class="controls">
+        <div class="seg" id="heatSplit">
+          <button data-s="all" class="on">전체</button>
+          <button data-s="wd">평일</button>
+          <button data-s="we">주말</button>
+        </div>
+        <div class="seg" id="heatRange">
+          <button data-n="14">14일</button>
+          <button data-n="30" class="on">30일</button>
+          <button data-n="60">60일</button>
+          <button data-n="90">90일</button>
+        </div>
+        <span class="heat-legend">낮음<span class="heat-grad"></span>높음</span>
+      </div>
+    </div>
+    <div class="hxwrap" id="heatChart"></div>
   </div>
 
   <!-- TABLE -->
